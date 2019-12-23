@@ -32,7 +32,7 @@ function timeSince(timestamp, compress) {
   return ___i18n(compress? "%s s":"%s seconds ago", Math.floor(seconds));
 }
 
-var getJSON = function (url) {
+var getJSON_old = function (url) {
   updateStatus("loading " + url);
   return new Promise(function (resolve, reject) {
     var xhr = new XMLHttpRequest();
@@ -65,6 +65,16 @@ var getJSON = function (url) {
     xhr.send();
   });
 };
+
+var getJSON = function (url){
+  updateStatus("loading " + url);
+  fetch(url).then(function (response) {
+    return response.json();
+  }).then(function (data) {
+    callback(data);
+  });
+};
+
 
 function addListeners(xhr) {
   xhr.addEventListener('loadstart', handleEvent);
