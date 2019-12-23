@@ -57,3 +57,40 @@ self.addEventListener('fetch', function (event) {
     }
 });
 
+self.addEventListener('fetch', function (event) {
+    var regex = /https:\/\/memberjs.org\//;
+    if (event.request.url.match(regex)) {
+        // Only call event.respondWith() if this looks like a server request.
+        // Because we don't call event.respondWith() for member API requests, they will not be
+        // handled by the service worker, and the default network behavior will apply.
+        event.respondWith(
+            fetch(event.request).then(function (response) {
+                if (!response.ok) {
+                    // An HTTP error response code (40x, 50x) won't cause the fetch() promise to reject.
+                    // We need to explicitly throw an exception to trigger the catch() clause.
+                    throw Error('response status ' + response.status);
+                }
+                // If the response was okay, cache it and return
+                return caches.open(RUNTIME).then(cache => {
+                    return fetch(event.request).then(response => {
+                        // Put a copy of the response in the runtime cache.
+                        return cache.put(event.request, response.clone()).then(() => {
+                            return response;
+                        });
+                    });
+                });
+            }).catch(function (error) {
+                console.warn('Constructing a fallback response, ' +
+                    'due to an error while fetching the real response:', error);
+                return caches.open(RUNTIME).then(cache => {
+                    // Put a copy of the response in the runtime cache.
+                    return cache.get(event.request).then((fallbackResponse) => {
+                        return new Response(JSON.stringify(fallbackResponse), {
+                            headers: {'Content-Type': 'application/json'}
+                        });
+                    });
+                });
+            })
+        );
+    }
+});
