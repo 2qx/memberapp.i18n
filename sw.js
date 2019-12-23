@@ -9,6 +9,18 @@ const PRECACHE_URLS = [
     'locale/en.json',
     'js/leaflet/leaflet.js'
 ];
+
+
+const API_URLS = new RegExp(
+    '^(?:' +
+    [
+        "/https:\/\/memberjs.org\/",
+        "/https:\/\/memberjs.org:8123\/",
+        "/https:\/\/memberjs.org:8124\/"
+    ]
+        .join("|") + ')$'
+);
+
 const VERSION = '3.1.0.9';
 const RUNTIME = 'runtime-' + VERSION;
 const INSTALL = 'install-' + VERSION;
@@ -58,8 +70,9 @@ self.addEventListener('fetch', function (event) {
 });
 
 self.addEventListener('fetch', function (event) {
-    var regex = /https:\/\/memberjs.org\//;
+    var regex = /https:\/\/memberjs.org\/;
     if (event.request.url.match(regex)) {
+        console.log("regex match for memberjs.org:")
         // Only call event.respondWith() if this looks like a server request.
         // Because we don't call event.respondWith() for member API requests, they will not be
         // handled by the service worker, and the default network behavior will apply.
