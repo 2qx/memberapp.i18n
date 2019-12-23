@@ -68,7 +68,7 @@ var getJSON_old = function (url) {
 
 var getJSON = function (url){
   updateStatus("loading " + url);
-  fetch(url).then(function (response) {
+  return fetch(url).then(function (response) {
     return response.json();
   });
 };
