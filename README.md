@@ -1,9 +1,19 @@
 Todo
 ------
 
-- Don't cache dev origins
-- Failover server requests to cache
+- ~~Failover server requests to cache~~ (Foreign fetch was removed from W3)
+- Subscribe to push notifications in settings
 - Update service worker on new version
+- Themes don't work when installed under Chrome on android
+- Fix menu on mobile
+  - collapse on mobile
+  - store settings in local storage
+  - make logo or name link refresh
+- Make icon bigger
+- Firefox Mobile doesn't offer to install
+- Offline indication
+- Don't cache dev origins
+
 
 
 Member
