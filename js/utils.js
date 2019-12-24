@@ -74,7 +74,7 @@ var getJSON = function (url) {
     }).catch(function(error) {
       return resolve(error);
     });
-  };
+  });
 };
 
 function addListeners(xhr) {
