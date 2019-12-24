@@ -66,13 +66,16 @@ var getJSON_old = function (url) {
   });
 };
 
-var getJSON = function (url){
+var getJSON = function (url) {
   updateStatus("loading " + url);
-  return fetch(url).then(function (response) {
-    return response.json();
-  });
+  return new Promise(function (resolve, reject) {
+    fetch(url).then(function (response) {
+      return resolve(response.json());
+    }).catch(function(error) {
+      return resolve(error);
+    });
+  };
 };
-
 
 function addListeners(xhr) {
   xhr.addEventListener('loadstart', handleEvent);

@@ -1,7 +1,6 @@
 Todo
 ------
 
-- Don't cache dev origins
 - Failover server requests to cache
 - Update service worker on new version
 
