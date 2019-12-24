@@ -1,7 +1,10 @@
 Todo
 ------
 
-- Failover server requests to cache
+As foreign-fetch is not supported, caching api calls is not feasible while
+ the api is on a different origin 
+
+- ~~Failover server requests to cache~~
 - Update service worker on new version
 
 
