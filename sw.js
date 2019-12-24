@@ -70,7 +70,6 @@ self.addEventListener('fetch', function (event) {
 });
 
 self.addEventListener('fetch', function (event) {
-    console.log("test regex match for memberjs.org: " + event.request.url)
     if (event.request.url.match(API_URLS)) {
         // Only call event.respondWith() if this looks like a server request.
         // Because we don't call event.respondWith() for member API requests, they will not be
