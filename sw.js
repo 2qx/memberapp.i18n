@@ -14,9 +14,9 @@ const PRECACHE_URLS = [
 const API_URLS = new RegExp(
     '^(?:' +
     [
-        "/https:\/\/memberjs.org\/",
-        "/https:\/\/memberjs.org:8123\/",
-        "/https:\/\/memberjs.org:8124\/"
+        "https:\/\/memberjs.org\/",
+        "https:\/\/memberjs.org:8123\/",
+        "https:\/\/memberjs.org:8124\/"
     ]
         .join("|") + ')$'
 );
@@ -70,9 +70,8 @@ self.addEventListener('fetch', function (event) {
 });
 
 self.addEventListener('fetch', function (event) {
-
+    console.log("test regex match for memberjs.org: " + event.request.url)
     if (event.request.url.match(API_URLS)) {
-        console.log("regex match for memberjs.org: " + event.request.url)
         // Only call event.respondWith() if this looks like a server request.
         // Because we don't call event.respondWith() for member API requests, they will not be
         // handled by the service worker, and the default network behavior will apply.
