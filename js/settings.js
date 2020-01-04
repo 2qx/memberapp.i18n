@@ -292,13 +292,24 @@ function toggleNotifications() {
                         subscription: subscription
                     }),
                 })
-                    .catch(function (e) {
-                        if (Notification.permission === 'denied') {
-                            console.warn('Permission for Notifications was denied');
-                        } else {
-                            console.error('Unable to subscribe to push.', e);
-                        }
+                .catch(function (e) {
+                    if (Notification.permission === 'denied') {
+                        console.warn('Permission for Notifications was denied');
+                    } else {
+                        console.error('Unable to subscribe to push.', e);
+                    }
+                });
+                document.getElementById('testNotification').onclick = function() {
+                    fetch('./sendNotification', {
+                        method: 'post',
+                        headers: {
+                            'Content-type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            subscription: subscription
+                        }),
                     });
+                };
             })
     });
 }

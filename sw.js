@@ -38,7 +38,7 @@ self.addEventListener("activate", function (event) {
 
 self.addEventListener('fetch', function (event) {
     // Skip cross-origin requests, like those for Google Analytics.
-    if (event.request.url.startsWith(self.location.origin)) {
+    if (event.request.url.startsWith(self.location.origin) && event.request.method == 'GET') {
         event.respondWith(
             caches.match(event.request).then(cachedResponse => {
                 if (cachedResponse) {
@@ -57,3 +57,47 @@ self.addEventListener('fetch', function (event) {
     }
 });
 
+
+// Register event listener for the 'push' event.
+self.addEventListener('push', function(event) {
+    event.waitUntil(
+        // Retrieve a list of the clients of this service worker.
+        self.clients.matchAll().then(function(clientList) {
+            // Check if there's at least one focused client.
+            var focused = clientList.some(function(client) {
+                return client.focused;
+            });
+
+            var notificationMessage;
+            if (focused) {
+                notificationMessage = 'You\'re still here, thanks!';
+            } else if (clientList.length > 0) {
+                notificationMessage = 'You haven\'t closed the page, ' +
+                    'click here to focus it!';
+            } else {
+                notificationMessage = 'You have closed the page, ' +
+                    'click here to re-open it!';
+            }
+
+            return self.registration.showNotification('Memberapp', {
+                body: notificationMessage,
+            });
+        })
+    );
+});
+
+// Register event listener for the 'notificationclick' event.
+self.addEventListener('notificationclick', function(event) {
+    event.waitUntil(
+        // Retrieve a list of the clients of this service worker.
+        self.clients.matchAll().then(function(clientList) {
+            // If there is at least one client, focus it.
+            if (clientList.length > 0) {
+                return clientList[0].focus();
+            }
+
+            // Otherwise, open a new page.
+            return self.clients.openWindow('/#notifications?start=0&limit=25');
+        })
+    );
+});
