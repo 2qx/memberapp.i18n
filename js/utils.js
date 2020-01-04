@@ -222,6 +222,7 @@ function localStorageSet(theSO, itemName, theString) {
   }
 }
 
+
 function base64UrlToUint8Array(base64UrlData) {
   const padding = '='.repeat((4 - base64UrlData.length % 4) % 4);
   const base64 = (base64UrlData + padding)
@@ -238,7 +239,7 @@ function base64UrlToUint8Array(base64UrlData) {
   return buffer;
 }
 
-var usdrate = 191.36;
+var usdrate = 203.03;
 function balanceString(total, includeSymbol) {
   if (dropdowns.currencydisplay == "BCH") {
     var balString = (Number(total) / 1000).toFixed(3);
@@ -249,9 +250,12 @@ function balanceString(total, includeSymbol) {
       return balString + " sats ";
     }
   }
-
   var usd = ((Number(total) * usdrate) / 100000000).toFixed(2);
-  return "$"+usd;
+  if(usd<1){
+    return usd*100+"¢";
+  }else{
+    return "$"+usd;
+  }
 }
 
 function detectMultipleIDS() {
