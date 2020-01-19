@@ -27,13 +27,15 @@ function getAndPopulateMap(geohash, posttrxid) {
         if (!map.restoreView()) {
             map.setView([51.505, -0.09], 13);
         }
-        var layer = L.tileLayer(mapTileProvider, 
-            {
-                useCache: (location.protocol === 'https:' || location.hostname === 'localhost'),
-                useOnlyCache: false,
-                crossOrigin: true,
-                edgeBufferTiles: 5
-            });
+        var layer = Tangram.leafletLayer({ scene: 'js/leaflet/scene.yaml' });
+
+        // var layer = L.tileLayer(mapTileProvider, {
+        //         useCache: (location.protocol === 'https:' || location.hostname === 'localhost'),
+        //         useOnlyCache: false,
+        //         crossOrigin: true,
+        //         edgeBufferTiles: 2
+        //         }
+        //     );
         
         layer.addTo(map);
 
