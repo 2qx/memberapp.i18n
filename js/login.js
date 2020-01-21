@@ -11,7 +11,6 @@ let tq = new TransactionQueue(updateStatus);
 var defaulttip = 1000;
 var oneclicktip = 0;
 var maxfee = 5;
-mapTileProvider='https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 
 //var twitterEmbeds=new Array();
 
