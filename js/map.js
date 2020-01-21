@@ -29,10 +29,8 @@ function getAndPopulateMap(geohash, posttrxid) {
         }
         var layer = L.tileLayer(mapTileProvider, 
             {
-                useCache: (location.protocol === 'https:' || location.hostname === 'localhost'),
-                useOnlyCache: false,
                 crossOrigin: true,
-                edgeBufferTiles: 5
+                edgeBufferTiles: 2
             });
         
         layer.addTo(map);
