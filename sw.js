@@ -56,6 +56,19 @@ self.addEventListener("activate", function (event) {
         );
 });
 
+function alwaysReturnCached(event, cacheName) {
+  event.respondWith(
+    caches.match(event.request).then(function (cachedResponse) {
+      return cachedResponse || fetch(event.request).then(function (response) {
+        var cacheResponse = response.clone();
+        caches.open(cacheName).then(function (cache) {
+          cache.put(event.request, cacheResponse);
+        });
+        return response;
+      });
+    })
+  );
+}
 
 self.addEventListener('fetch', function (event) {
 
@@ -67,16 +80,8 @@ self.addEventListener('fetch', function (event) {
         }
       }));
     }
-    else if (event.request.url.includes('offline-map-tiles')) {
-      event.respondWith(
-        caches.match(event.request).then(cachedResponse => {
-          //console.log("[ServiceWorker] Request "+event.request.url)
-            if (cachedResponse) {
-                return cachedResponse;
-            }else{
-              console.log("[ServiceWorker] Error: 404 "+ event.request.url)
-            }
-          }));
+    else if (event.request.url.startsWith('https:\/\/tile.openstreetmap.org\/')) {
+      return alwaysReturnCached(event, 'mapbox-tiles')
     }
     else if (event.request.url.startsWith(self.location.origin)) {
         event.respondWith(
