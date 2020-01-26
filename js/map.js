@@ -1,10 +1,11 @@
-    "use strict";
+"use strict";
 
 var map = null;
 var popup;
 var postpopup;
 var markersDict = {};
 var firstload = true;
+
 
 function getAndPopulateMap(geohash, posttrxid) {
 
@@ -27,12 +28,12 @@ function getAndPopulateMap(geohash, posttrxid) {
         if (!map.restoreView()) {
             map.setView([51.505, -0.09], 13);
         }
-        var layer = L.tileLayer(mapTileProvider, 
+        var layer = L.tileLayer(mapTileProvider,
             {
                 crossOrigin: true,
-                edgeBufferTiles: 2
+                edgeBufferTiles: 1, //turning this up floods the service and slows responses by 10X
             });
-        
+
         layer.addTo(map);
 
         //Attribution
@@ -55,8 +56,6 @@ function getAndPopulateMap(geohash, posttrxid) {
                 popup.txid = posttrxid;
             }
 
-            map.setView(zoomLocation, 15);
-
             if (posttrxid != null && posttrxid != "") {
                 popup.setLatLng(zoomLocation).setContent(mapThreadLoadingHTML("")).openOn(map);
                 getAndPopulateThread(posttrxid, posttrxid, 'mapthread');
@@ -70,7 +69,7 @@ function getAndPopulateMap(geohash, posttrxid) {
 
     //map.on('moveend', onMapMove);
     map.on('moveend', function () {
-        suspendPageReload=true;
+        suspendPageReload = true;
         if (firstload && popup.txid != null) {
             location.href = "#map?geohash=" + encodeGeoHash(map.getCenter().lat, map.getCenter().lng) + "&post=" + popup.txid;
             firstload = false;
@@ -80,7 +79,7 @@ function getAndPopulateMap(geohash, posttrxid) {
         } else {
             location.href = "#map?geohash=" + encodeGeoHash(map.getCenter().lat, map.getCenter().lng);
         }
-        setTimeout(function () {suspendPageReload=false;},1000);
+        setTimeout(function () { suspendPageReload = false; }, 1000);
     });
 
     popup.on('close', function (e) {
@@ -90,7 +89,6 @@ function getAndPopulateMap(geohash, posttrxid) {
         popup.txid = null;
         map.moveend();
     });
-
 
 }
 
@@ -102,9 +100,9 @@ function openOverlay(e) {
     getAndPopulateThread(marker.roottxid, marker.txid, 'mapthread');
     popup.txid = marker.roottxid;
     popup.txidloc = e.latlng;
-    suspendPageReload=true;
+    suspendPageReload = true;
     location.href = "#map?geohash=" + encodeGeoHash(e.latlng.lat, e.latlng.lng) + "&post=" + popup.txid;
-    setTimeout(function () {suspendPageReload=false;},1000);
+    setTimeout(function () { suspendPageReload = false; }, 1000);
     return;
 }
 
@@ -114,10 +112,25 @@ function openPreview(e) {
     return;
 }
 
+function round_100m(x) {
+    let precision = 0.001
+    var y = +x + (precision === undefined ? 0.5 : precision / 2);
+    return y - (y % (precision === undefined ? 1 : +precision));
+}
+
+function getMapBoundParams(mapBounds) {
+    var ne = mapBounds.getNorthEast();
+    var sw = mapBounds.getSouthWest();
+    return "&north=" + round_100m(ne.lat)
+        + "&east=" + round_100m(ne.lng)
+        + "&south=" + round_100m(sw.lat)
+        + "&west=" + round_100m(sw.lng);
+
+}
 
 function onMapClick(e) {
 
-    var htmlContent = getMapPostHTML(e.latlng.lat, e.latlng.lng, (pubkey==''));
+    var htmlContent = getMapPostHTML(e.latlng.lat, e.latlng.lng, (pubkey == ''));
 
     postpopup.setLatLng(e.latlng).setContent(htmlContent).openOn(map);
 }
@@ -126,25 +139,105 @@ function onMapClick(e) {
 function loadLocationListFromServerAndPlaceOnMap(event) {
 
     var mapBounds = map.getBounds();
-    var url = dropdowns.contentserver + '?action=map&address=' + pubkey + "&north=" + mapBounds.getNorthEast().lat + "&east=" + mapBounds.getNorthEast().lng + "&south=" + mapBounds.getSouthWest().lat + "&west=" + mapBounds.getSouthWest().lng;
-    getJSON(url).then(function (data) {
+    var url = dropdowns.contentserver + '?action=map&address=' + pubkey + getMapBoundParams(mapBounds);
+    fetchJSON(url).then(function (data) {
         var contents = "";
         for (var i = 0; i < data.length; i++) {
             var pageName = san(data[i].txid);
             var marker = markersDict[pageName];
             if (marker == null) {
-                var marker = L.marker([Number(data[i].lat), Number(data[i].lon)]).addTo(map);
-                marker.txid = san(data[i].txid);
-                marker.roottxid = san(data[i].roottxid);
-                marker.previewHTML = ds(data[i].message);
-                markersDict[pageName] = marker;
-                marker.on('click', openOverlay);
-                marker.on('mouseover', openPreview);
+                markersDict[pageName] = createMarker(data[i])
+                cacheMapData(data);
             }
         }
     }, function (status) { //error detection....
-        console.log('Something is wrong:' + status);
+        console.log('Attempting to resolve response from cache:' + status);
+        var centerHash = encodeGeoHash(map.getCenter().lat, map.getCenter().lng);
+        searchCache(centerHash).then(function (data) {
+            var contents = "";
+            for (var i = 0; i < data.length; i++) {
+                var pageName = san(data[i].txid);
+                var marker = markersDict[pageName];
+                if (marker == null) {
+                    markersDict[pageName] = createMarker(data[i])
+                }
+            }
+        });
         updateStatus(status);
     });
 
+}
+
+function createMarker(m){
+    var marker = L.marker([Number(m.lat), Number(m.lon)]).addTo(map);
+    marker.txid = san(m.txid);
+    marker.roottxid = san(m.roottxid);
+    marker.previewHTML = ds(m.message);
+    marker.on('click', openOverlay);
+    marker.on('mouseover', openPreview);
+    return marker;
+}
+
+function cacheMapData(data) {
+    if (window.indexedDB) {
+        var request = indexedDB.open('messageDB', 3);
+
+        request.onupgradeneeded = function (event) {
+            // Create another object store called "names" with the autoIncrement flag set as true.    
+            var objStore = event.target.result.createObjectStore("messages", { keyPath: "txid", autoIncrement: false });
+            objStore.createIndex("geohash", "geohash", { unique: false });
+            data.forEach(function (message) {
+                objStore.add(message);
+            });
+        };
+        request.onsuccess = function (event) {
+            // Create another object store called "names" with the autoIncrement flag set as true.    
+            var objStore = event.target.result.transaction("messages", 'readwrite').objectStore("messages");
+            data.forEach(function (message) {
+                objStore.add(message);
+            });
+        };
+    }
+}
+
+
+
+function searchCache(geohash) {
+    return new Promise((resolve, reject) => {
+        if (window.indexedDB) {
+            var request = indexedDB.open('messageDB', 3);
+
+            request.onupgradeneeded = function (event) {
+                // Create another object store called "names" with the autoIncrement flag set as true.    
+                var objStore = event.target.result.createObjectStore("messages", { keyPath: "txid", autoIncrement: false });
+                objStore.createIndex("geohash", "geohash", { unique: false });
+            };
+            request.onsuccess = function (event) {
+                console.log("success");
+                // Create another object store called "names" with the autoIncrement flag set as true.  
+                var db = event.target.result;
+                var objectStore = db.transaction("messages", 'readwrite').objectStore("messages")
+                var index = objectStore.index("geohash");
+                var results = []
+                index.openCursor(null, "nextunique").onsuccess = function (e) {
+                    var cursor = e.target.result;
+                    if (cursor) {
+                        if(cursor.key.startsWith(geohash.substr(0, 2))){
+                            request = objectStore.get(cursor.primaryKey);
+                            request.onsuccess = function (evt) {
+                              var obj = evt.target.result;
+                              results.push(obj)
+                            };
+                        }
+                        cursor.continue();
+                    } else {
+                        resolve(results)
+                    }
+                };
+            };
+        } else {
+            console.log("indexedDB not supported");
+            resolve([])
+        }
+    });
 }

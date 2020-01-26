@@ -66,6 +66,17 @@ var getJSON = function (url) {
   });
 };
 
+var fetchJSON = function (url) {
+  updateStatus("loading " + url);
+  return fetch(url)
+  .then((response) => {
+    return response.json();
+  })
+  .catch((error) => {
+    throw new Error(error.statusText);
+  });
+};
+
 function addListeners(xhr) {
   xhr.addEventListener('loadstart', handleEvent);
   xhr.addEventListener('load', handleEvent);

@@ -17,7 +17,7 @@ function getAndPopulateNew(order, content, topicnameHOSTILE, filter, start, limi
     document.getElementById(page).innerHTML = document.getElementById("loading").innerHTML;
 
     //Request content from the server and display it when received
-    getJSON(dropdowns.contentserver + '?action=show&order=' + order + '&content=' + content + '&topicname=' + encodeURIComponent(topicnameHOSTILE) + '&filter=' + filter + '&address=' + qaddress + '&start=' + start + '&limit=' + limit).then(function (data) {
+    fetchJSON(dropdowns.contentserver + '?action=show&order=' + order + '&content=' + content + '&topicname=' + encodeURIComponent(topicnameHOSTILE) + '&filter=' + filter + '&address=' + qaddress + '&start=' + start + '&limit=' + limit).then(function (data) {
 
         //if(data.length>0){updateStatus("QueryTime:"+data[0].msc)};
         //Show navigation next/back buttons
@@ -35,9 +35,7 @@ function getAndPopulateNew(order, content, topicnameHOSTILE, filter, start, limi
         }
         displayItemListandNavButtonsHTML(contents, navbuttons, page, data, "posts", start);
     }, function (status) { //error detection....
-        console.log('Something is wrong:' + status);
-        document.getElementById(page).innerHTML = 'Something is wrong:' + status;
-        updateStatus(status);
+        reportErrorToUser(status, page)
     });
 
 }
@@ -58,7 +56,7 @@ function getAndPopulate(start, limit, page, qaddress, type, topicNameHOSTILE) {
 
 
     //Request content from the server and display it when received
-    getJSON(dropdowns.contentserver + '?action=' + page + '&topicname=' + encodeURIComponent(topicNameHOSTILE) + '&address=' + pubkey + '&type=' + type + '&qaddress=' + qaddress + '&start=' + start + '&limit=' + limit).then(function (data) {
+    fetchJSON(dropdowns.contentserver + '?action=' + page + '&topicname=' + encodeURIComponent(topicNameHOSTILE) + '&address=' + pubkey + '&type=' + type + '&qaddress=' + qaddress + '&start=' + start + '&limit=' + limit).then(function (data) {
 
         //Show navigation next/back buttons
         var navbuttons = getNavButtonsHTML(start, limit, page, type, qaddress, topicNameHOSTILE, "getAndPopulate", data.length);
@@ -76,9 +74,7 @@ function getAndPopulate(start, limit, page, qaddress, type, topicNameHOSTILE) {
         displayItemListandNavButtonsHTML(contents, navbuttons, page, data, "posts", start);
         //detectMultipleIDS();
     }, function (status) { //error detection....
-        console.log('Something is wrong:' + status);
-        document.getElementById(page).innerHTML = 'Something is wrong:' + status;
-        updateStatus(status);
+        reportErrorToUser(status, page)
     });
 
 }
@@ -94,7 +90,7 @@ function getAndPopulateThread(roottxid, txid, pageName) {
     //If no post is specified, we'll use it as a top level
     if (txid === undefined || txid == "") { txid = roottxid; }
 
-    getJSON(dropdowns.contentserver + '?action=thread&address=' + pubkey + '&txid=' + txid).then(function (data) {
+    fetchJSON(dropdowns.contentserver + '?action=thread&address=' + pubkey + '&txid=' + txid).then(function (data) {
         //Server bug will sometimes return duplicates if a post is liked twice for example,
         // this is a workaround, better if fixed server side.
         data = removeDuplicates(data);
@@ -144,9 +140,7 @@ function getAndPopulateThread(roottxid, txid, pageName) {
         scrollTo("highlightedcomment");
         //detectMultipleIDS();
     }, function (status) { //error detection....
-        console.log('Something is wrong:' + status);
-        document.getElementById(pageName).innerHTML = 'Something is wrong:' + status;
-        updateStatus(status);
+            reportErrorToUser(status, pageName)
     });
 }
 
@@ -157,7 +151,7 @@ function getAndPopulateTopicList(showpage) {
         show(page);
     }
     document.getElementById(page).innerHTML = document.getElementById("loading").innerHTML;
-    getJSON(dropdowns.contentserver + '?action=topiclist&qaddress=' + pubkey).then(function (data) {
+    fetchJSON(dropdowns.contentserver + '?action=topiclist&qaddress=' + pubkey).then(function (data) {
 
         var selectboxIndex=5;
         var selectbox = document.getElementById('topicselector');
@@ -196,13 +190,16 @@ function getAndPopulateTopicList(showpage) {
         document.getElementById(page).innerHTML = contents;
         //detectMultipleIDS();
     }, function (status) { //error detection....
-        console.log('Something is wrong:' + status);
-        document.getElementById(page).innerHTML = 'Something is wrong:' + status;
-        updateStatus(status);
+        reportErrorToUser(status, page)
     });
 }
 
 
+function reportErrorToUser(status, elementId){
+    console.log('Something is wrong: Error:' + JSON.stringify(status));
+    document.getElementById(elementId).innerHTML = 'Something is wrong:' + status;
+    updateStatus(status);
+}
 
 function displayItemListandNavButtonsHTML(contents, navbuttons, page, data, styletype, start) {
     contents = getItemListandNavButtonsHTML(contents, navbuttons, styletype, start);
