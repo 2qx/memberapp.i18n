@@ -180,23 +180,14 @@ function createMarker(m){
 
 function cacheMapData(data) {
     if (window.indexedDB) {
-        var request = indexedDB.open('messageDB', 3);
-
-        request.onupgradeneeded = function (event) {
-            // Create another object store called "names" with the autoIncrement flag set as true.    
-            var objStore = event.target.result.createObjectStore("messages", { keyPath: "txid", autoIncrement: false });
-            objStore.createIndex("geohash", "geohash", { unique: false });
+        assureDB();
+        return dbs.get(DATABASE).then(db => new Promise((resolve, reject) => {
+            var tx = db.transaction("messages", "readwrite");
+            var objStore = tx.objectStore("messages");
             data.forEach(function (message) {
-                objStore.add(message);
+                resolve(objStore.add(message));
             });
-        };
-        request.onsuccess = function (event) {
-            // Create another object store called "names" with the autoIncrement flag set as true.    
-            var objStore = event.target.result.transaction("messages", 'readwrite').objectStore("messages");
-            data.forEach(function (message) {
-                objStore.add(message);
-            });
-        };
+          }));
     }
 }
 
@@ -205,19 +196,11 @@ function cacheMapData(data) {
 function searchCache(geohash) {
     return new Promise((resolve, reject) => {
         if (window.indexedDB) {
-            var request = indexedDB.open('messageDB', 3);
-
-            request.onupgradeneeded = function (event) {
-                // Create another object store called "names" with the autoIncrement flag set as true.    
-                var objStore = event.target.result.createObjectStore("messages", { keyPath: "txid", autoIncrement: false });
-                objStore.createIndex("geohash", "geohash", { unique: false });
-            };
-            request.onsuccess = function (event) {
-                console.log("success");
-                // Create another object store called "names" with the autoIncrement flag set as true.  
-                var db = event.target.result;
-                var objectStore = db.transaction("messages", 'readwrite').objectStore("messages")
-                var index = objectStore.index("geohash");
+            assureDB();
+            return dbs.get(DATABASE).then(db => new Promise((resolve, reject) => {
+                var tx = db.transaction("messages");
+                var objStore = tx.objectStore("messages");
+                var index = objStore.index("geohash");
                 var results = []
                 index.openCursor(null, "nextunique").onsuccess = function (e) {
                     var cursor = e.target.result;
@@ -234,7 +217,7 @@ function searchCache(geohash) {
                         resolve(results)
                     }
                 };
-            };
+              }));
         } else {
             console.log("indexedDB not supported");
             resolve([])

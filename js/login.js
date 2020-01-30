@@ -79,6 +79,7 @@ function init() {
         return;
     }
     displayContentBasedOnURLParameters();
+    assureDB();
 }
 
 function getAndSetVersion(){
@@ -223,3 +224,25 @@ function setAddonStyle(newStyle) {
 function refreshPool() {
     tq.utxopools[pubkey].refreshPool();
 }
+
+const DATABASE = 'messagesDB'
+const version = '3.5.5.9';
+var dbs = new Map(); // name --> Promise<IDBDatabase>
+
+function assureDB() {
+    var version_int = Number(version.replace(/\D/g,''));
+    if (!dbs.has(DATABASE)) {
+      dbs.set(DATABASE, new Promise((resolve, reject) => {
+        var request = indexedDB.open(DATABASE, version_int);
+        request.onupgradeneeded = function (event) {   
+          var objStore = event.target.result.createObjectStore("messages", { keyPath: "txid", autoIncrement: false });
+          objStore.createIndex("geohash", "geohash", { unique: false });
+          objStore.createIndex("firstseen", "firstseen", { unique: false });
+          objStore.createIndex("roottxid", "roottxid", { unique: false });
+          objStore.createIndex("nametxid", "nametxid", { unique: false });
+        };
+        request.onerror = e => reject(request.error);
+        request.onsuccess = e => resolve(request.result);
+      }));
+    }
+  }

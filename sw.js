@@ -18,7 +18,27 @@ const INSTALL = 'install-' + version;
 const API = 'api-' + version;
 const MAP_TILES = 'offline-map-tiles';
 
+const DATABASE = 'messagesDB'
+
 var dbs = new Map(); // name --> Promise<IDBDatabase>
+
+function assureDB() {
+  var version_int = Number(version.replace(/\D/g,''));
+  if (!dbs.has(DATABASE)) {
+    dbs.set(DATABASE, new Promise((resolve, reject) => {
+      var request = indexedDB.open(DATABASE, version_int);
+      request.onupgradeneeded = function (event) {   
+        var objStore = event.target.result.createObjectStore("messages", { keyPath: "txid", autoIncrement: false });
+        objStore.createIndex("geohash", "geohash", { unique: false });
+        objStore.createIndex("firstseen", "firstseen", { unique: false });
+        objStore.createIndex("roottxid", "roottxid", { unique: false });
+        objStore.createIndex("nametxid", "nametxid", { unique: false });
+      };
+      request.onerror = e => reject(request.error);
+      request.onsuccess = e => resolve(request.result);
+    }));
+  }
+}
 
 self.addEventListener('install', (event) => {
   self.skipWaiting()
@@ -156,18 +176,6 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
-function assureDB() {
-  var database = 'messageDB';
-  if (!dbs.has(database)) {
-    dbs.set(database, new Promise((resolve, reject) => {
-      var request = indexedDB.open(database);
-      // Abort the open if it was not already populated.
-      request.onupgradeneeded = e => request.transaction.abort();
-      request.onerror = e => reject(request.error);
-      request.onsuccess = e => resolve(request.result);
-    }));
-  }
-}
 
 function buildCachedApiResponse(event) {
   if (event.request.method !== 'GET'){
@@ -197,7 +205,7 @@ function threadFromCache(event, txid) {
         properties  = {}
         properties.headers = { 'Content-Type': 'text/application/json' };
         properties.status = 203;
-        properties.statusText = "A response was build from a local database";
+        properties.statusText = "This response was built from your local datastore";
         resolve(new Response(JSON.stringify([request.result]), properties));
       } else {
         var init = { "status": 503, "statusText": "Service unavailable, no offline cache, not in local db" };
