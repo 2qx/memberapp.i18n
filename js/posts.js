@@ -140,6 +140,7 @@ function getAndPopulateThread(roottxid, txid, pageName) {
         scrollTo("highlightedcomment");
         //detectMultipleIDS();
     }, function (status) { //error detection....
+        console.log(JSON.stringify(status))
             reportErrorToUser(status, pageName)
     });
 }
@@ -195,9 +196,9 @@ function getAndPopulateTopicList(showpage) {
 }
 
 
-function reportErrorToUser(status, elementId){
-    console.log('Something is wrong: Error:' + JSON.stringify(status));
-    document.getElementById(elementId).innerHTML = 'Something is wrong:' + status;
+function reportErrorToUser(response, elementId){
+
+    document.getElementById(elementId).innerHTML = 'Something is wrong, Error: ' + response.status + " (" + response.statusText + ")";
     updateStatus(status);
 }
 

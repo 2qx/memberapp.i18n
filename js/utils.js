@@ -70,10 +70,17 @@ var fetchJSON = function (url) {
   updateStatus("loading " + url);
   return fetch(url)
   .then((response) => {
-    return response.json();
-  })
-  .catch((error) => {
-    throw new Error(error.statusText);
+    if(response.status == 200){
+      return response.json();
+    }
+    else if(response.status <= 400){
+      updateStatus(response.statusText);
+      return response.json();
+    }else{
+      throw response;
+    }
+  }).catch((error) => {
+    throw error;
   });
 };
 

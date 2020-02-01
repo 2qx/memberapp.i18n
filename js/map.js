@@ -183,7 +183,6 @@ function cacheMapData(data) {
         return dbs.get(DATABASE).then(db => new Promise((resolve, reject) => {
             var tx = db.transaction("messages", "readwrite");
             var objStore = tx.objectStore("messages");
-            console.log("Adding " +data.length+ " map markers to indexdb")
             data.forEach(function (message) {
                 resolve(objStore.add(message));
             });

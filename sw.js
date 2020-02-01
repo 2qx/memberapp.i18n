@@ -107,9 +107,10 @@ function networkThenCache(event, cacheName) {
       }).catch(function (error) {
         return caches.match(event.request).then(function (cachedResponse) {
           if (cachedResponse) {
-            resolve(cachedResponse);
+            var init = { "status" : 203 , "statusText" : "Not authoritative, viewing offline cache version" };
+            resolve(new Response(cachedResponse.body, init));
           } else {
-            var properties = { "status": 503, "statusText": "Service unavailable, no offline cache" };
+            var properties = { "status": 503, "statusText": "Service unavailable, this resource was not cached" };
             reject(new Response("", properties));
           }
         })
@@ -185,7 +186,7 @@ function buildCachedApiResponse(event) {
   if (action == 'thread') {
     return threadFromCache(event, query.get('txid'))
   } else {
-    var init = { "status": 503, "statusText": "Service unavailable, no offline cache, this action is not supported" };
+    var init = { "status": 503, "statusText": "Service unavailable, no offline cache, and a service for this type of request is not implemented locally" };
     return new Response("", init);
   }
 }
@@ -194,24 +195,25 @@ function threadFromCache(event, txid) {
   return dbs.get(DATABASE).then(db => new Promise((resolve, reject) => {
       var tx = db.transaction("messages");
       var request = tx.objectStore("messages").get(txid);
-      request.onerror = e => reject(request.error);
+      request.onerror = e => {
+        console.log("could not get " + txid);
+        reject(request.error)
+      };
       request.onsuccess = e => {
         if (!(request.result == undefined)) {
           properties  = {}
           properties.headers = { 'Content-Type': 'text/application/json' };
           properties.status = 203;
-          properties.statusText = "This response was built from your local datastore";
-          console.log(properties.statusText)
+          properties.statusText = "Not authoritative, offline datastore";
           resolve(new Response(JSON.stringify([request.result]), properties));
         } else {
-          var init = { "status": 503, "statusText": "Service unavailable, no offline cache, not in local db" };
-          reject(new Response("", init));
+          var init = { "status": 503, "statusText": "Server did not respond, no offline cache, and could not build from local index" };
+          resolve(new Response("", init));
         }
       };
-    }).catch(function(e) {
-      console.log(e); // doesn't happen
     })).catch(function(e) {
       console.log(e); // doesn't happen
+      return e;
     });
   
 }
