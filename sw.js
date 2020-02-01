@@ -19,12 +19,10 @@ const API = 'api-' + version;
 const MAP_TILES = 'offline-map-tiles';
 
 const DATABASE = 'messagesDB'
-
 var dbs = new Map(); // name --> Promise<IDBDatabase>
 
-function assureDB() {
-  var version_int = Number(version.replace(/\D/g,''));
-  if (!dbs.has(DATABASE)) {
+if (!dbs.has(DATABASE)) {
+    const version_int = Number(version.replace(/\D/g,''));
     dbs.set(DATABASE, new Promise((resolve, reject) => {
       var request = indexedDB.open(DATABASE, version_int);
       request.onupgradeneeded = function (event) {   
@@ -37,8 +35,8 @@ function assureDB() {
       request.onerror = e => reject(request.error);
       request.onsuccess = e => resolve(request.result);
     }));
-  }
 }
+
 
 self.addEventListener('install', (event) => {
   self.skipWaiting()
@@ -161,7 +159,6 @@ self.addEventListener('fetch', async function (event) {
       networkThenCache(event, API).then(response => {
           return response
       }).catch(error => {
-        console.log(error)
           return buildCachedApiResponse(event)
       })
     );
@@ -194,23 +191,27 @@ function buildCachedApiResponse(event) {
 }
 
 function threadFromCache(event, txid) {
-  assureDB();
-
-  return dbs.get('messageDB').then(db => new Promise((resolve, reject) => {
-    var tx = db.transaction("messages");
-    var request = tx.objectStore("messages").get(txid);
-    request.onerror = e => reject(request.error);
-    request.onsuccess = e => {
-      if (!(request.result == undefined)) {
-        properties  = {}
-        properties.headers = { 'Content-Type': 'text/application/json' };
-        properties.status = 203;
-        properties.statusText = "This response was built from your local datastore";
-        resolve(new Response(JSON.stringify([request.result]), properties));
-      } else {
-        var init = { "status": 503, "statusText": "Service unavailable, no offline cache, not in local db" };
-        reject(new Response("", init));
-      }
-    };
-  }));
+  return dbs.get(DATABASE).then(db => new Promise((resolve, reject) => {
+      var tx = db.transaction("messages");
+      var request = tx.objectStore("messages").get(txid);
+      request.onerror = e => reject(request.error);
+      request.onsuccess = e => {
+        if (!(request.result == undefined)) {
+          properties  = {}
+          properties.headers = { 'Content-Type': 'text/application/json' };
+          properties.status = 203;
+          properties.statusText = "This response was built from your local datastore";
+          console.log(properties.statusText)
+          resolve(new Response(JSON.stringify([request.result]), properties));
+        } else {
+          var init = { "status": 503, "statusText": "Service unavailable, no offline cache, not in local db" };
+          reject(new Response("", init));
+        }
+      };
+    }).catch(function(e) {
+      console.log(e); // doesn't happen
+    })).catch(function(e) {
+      console.log(e); // doesn't happen
+    });
+  
 }

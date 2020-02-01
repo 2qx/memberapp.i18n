@@ -183,10 +183,14 @@ function cacheMapData(data) {
         return dbs.get(DATABASE).then(db => new Promise((resolve, reject) => {
             var tx = db.transaction("messages", "readwrite");
             var objStore = tx.objectStore("messages");
+            console.log("Adding " +data.length+ " map markers to indexdb")
             data.forEach(function (message) {
                 resolve(objStore.add(message));
             });
-          }));
+          })).catch(function(e) {
+            console.log(e); // doesn't happen
+          });
+          
     }
 }
 
@@ -198,14 +202,14 @@ function searchCache(geohash) {
             assureDB();
             return dbs.get(DATABASE).then(db => new Promise((resolve, reject) => {
                 var tx = db.transaction("messages");
-                var objStore = tx.objectStore("messages");
-                var index = objStore.index("geohash");
+                var objectStore = tx.objectStore("messages");
+                var index = objectStore.index("geohash");
                 var results = []
                 index.openCursor(null, "nextunique").onsuccess = function (e) {
                     var cursor = e.target.result;
                     if (cursor) {
                         if(cursor.key.startsWith(geohash.substr(0, 2))){
-                            request = objectStore.get(cursor.primaryKey);
+                            var request = objectStore.get(cursor.primaryKey);
                             request.onsuccess = function (evt) {
                               var obj = evt.target.result;
                               results.push(obj)
