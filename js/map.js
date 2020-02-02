@@ -138,7 +138,7 @@ function loadLocationListFromServerAndPlaceOnMap(event) {
 
     var mapBounds = map.getBounds();
     var url = dropdowns.contentserver + '?action=map&address=' + pubkey + getMapBoundParams(mapBounds);
-    fetchJSON(url, cacheMessages=true).then(function (data) {
+    fetchJSON(url, true).then(function (data) {
         for (var i = 0; i < data.length; i++) {
             var pageName = san(data[i].txid);
             var marker = markersDict[pageName];
