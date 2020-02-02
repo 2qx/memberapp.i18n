@@ -92,8 +92,6 @@ function getAndPopulateMap(geohash, posttrxid) {
 
 }
 
-
-
 function openOverlay(e) {
     var marker = e.sourceTarget;
     popup.setLatLng(e.latlng).setContent(mapThreadLoadingHTML(marker.previewHTML)).openOn(map);
@@ -146,22 +144,9 @@ function loadLocationListFromServerAndPlaceOnMap(event) {
             var marker = markersDict[pageName];
             if (marker == null) {
                 markersDict[pageName] = createMarker(data[i])
-                cacheMapData(data);
             }
         }
     }, function (status) { //error detection....
-        console.log('Attempting to resolve response from cache:' + status);
-        var centerHash = encodeGeoHash(map.getCenter().lat, map.getCenter().lng);
-        searchCache(centerHash).then(function (data) {
-            var contents = "";
-            for (var i = 0; i < data.length; i++) {
-                var pageName = san(data[i].txid);
-                var marker = markersDict[pageName];
-                if (marker == null) {
-                    markersDict[pageName] = createMarker(data[i])
-                }
-            }
-        });
         updateStatus(status);
     });
 
@@ -177,52 +162,5 @@ function createMarker(m){
     return marker;
 }
 
-function cacheMapData(data) {
-    if (window.indexedDB) {
-        assureDB();
-        return dbs.get(DATABASE).then(db => new Promise((resolve, reject) => {
-            var tx = db.transaction("messages", "readwrite");
-            var objStore = tx.objectStore("messages");
-            data.forEach(function (message) {
-                resolve(objStore.add(message));
-            });
-          })).catch(function(e) {
-            console.log(e); // doesn't happen
-          });
-          
-    }
-}
 
 
-
-function searchCache(geohash) {
-    return new Promise((resolve, reject) => {
-        if (window.indexedDB) {
-            assureDB();
-            return dbs.get(DATABASE).then(db => new Promise((resolve, reject) => {
-                var tx = db.transaction("messages");
-                var objectStore = tx.objectStore("messages");
-                var index = objectStore.index("geohash");
-                var results = []
-                index.openCursor(null, "nextunique").onsuccess = function (e) {
-                    var cursor = e.target.result;
-                    if (cursor) {
-                        if(cursor.key.startsWith(geohash.substr(0, 2))){
-                            var request = objectStore.get(cursor.primaryKey);
-                            request.onsuccess = function (evt) {
-                              var obj = evt.target.result;
-                              results.push(obj)
-                            };
-                        }
-                        cursor.continue();
-                    } else {
-                        resolve(results)
-                    }
-                };
-              }));
-        } else {
-            console.log("indexedDB not supported");
-            resolve([])
-        }
-    });
-}

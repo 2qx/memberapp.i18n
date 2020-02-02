@@ -66,12 +66,32 @@ var getJSON = function (url) {
   });
 };
 
+function cacheData(data){
+    if (window.indexedDB) {
+      return dbs.get(DATABASE).then(db => new Promise((resolve, reject) => {
+          var tx = db.transaction("messages", "readwrite");
+          var objStore = tx.objectStore("messages");
+          data.forEach(function (message) {
+            if(message.txid){
+              delete message.query
+              resolve(objStore.add(message));
+            }
+          });
+        })).catch(function(e) {
+          console.log(e); 
+          reject(e.statusText);
+        });
+  }
+}
 var fetchJSON = function (url) {
   updateStatus("loading " + url);
   return fetch(url)
   .then((response) => {
     if(response.status == 200){
-      return response.json();
+      return response.json().then(function(data) {
+        cacheData(data)
+        return data
+       });
     }
     else if(response.status <= 400){
       updateStatus(response.statusText);

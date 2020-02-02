@@ -70,13 +70,12 @@ function decodeGeoHash(geohash) {
 	return { latitude: lat, longitude: lon};
 }
 
-function encodeGeoHash(latitude, longitude) {
+function encodeGeoHash(latitude, longitude, precision = 12) {
 	var is_even=1;
 	var i=0;
 	var lat = []; var lon = [];
 	var bit=0;
 	var ch=0;
-	var precision = 12;
 	geohash = "";
 
 	lat[0] = -90.0;  lat[1] = 90.0;
