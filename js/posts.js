@@ -17,7 +17,7 @@ function getAndPopulateNew(order, content, topicnameHOSTILE, filter, start, limi
     document.getElementById(page).innerHTML = document.getElementById("loading").innerHTML;
 
     //Request content from the server and display it when received
-    fetchJSON(dropdowns.contentserver + '?action=show&order=' + order + '&content=' + content + '&topicname=' + encodeURIComponent(topicnameHOSTILE) + '&filter=' + filter + '&address=' + qaddress + '&start=' + start + '&limit=' + limit).then(function (data) {
+    fetchJSON(dropdowns.contentserver + '?action=show&order=' + order + '&content=' + content + '&topicname=' + encodeURIComponent(topicnameHOSTILE) + '&filter=' + filter + '&address=' + qaddress + '&start=' + start + '&limit=' + limit, true).then(function (data) {
 
         //if(data.length>0){updateStatus("QueryTime:"+data[0].msc)};
         //Show navigation next/back buttons
@@ -90,7 +90,7 @@ function getAndPopulateThread(roottxid, txid, pageName) {
     //If no post is specified, we'll use it as a top level
     if (txid === undefined || txid == "") { txid = roottxid; }
 
-    fetchJSON(dropdowns.contentserver + '?action=thread&address=' + pubkey + '&txid=' + txid).then(function (data) {
+    fetchJSON(dropdowns.contentserver + '?action=thread&address=' + pubkey + '&txid=' + txid, true).then(function (data) {
         //Server bug will sometimes return duplicates if a post is liked twice for example,
         // this is a workaround, better if fixed server side.
         data = removeDuplicates(data);

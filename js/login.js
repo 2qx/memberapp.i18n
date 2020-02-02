@@ -13,6 +13,11 @@ var oneclicktip = 0;
 var maxfee = 5;
 var mapTileProvider = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 
+const DATABASE = 'messagesDB'
+const version = '3.5.5.9';
+var dbs = new Map(); // name --> Promise<IDBDatabase>
+const MESSAGE_ENDPOINTS = ["thread","map","show"]
+
 //var twitterEmbeds=new Array();
 
 //These should probably all go in a single config object
@@ -225,9 +230,6 @@ function refreshPool() {
     tq.utxopools[pubkey].refreshPool();
 }
 
-const DATABASE = 'messagesDB'
-const version = '3.5.5.9';
-var dbs = new Map(); // name --> Promise<IDBDatabase>
 
 function assureDB() {
     var version_int = Number(version.replace(/\D/g,''));
