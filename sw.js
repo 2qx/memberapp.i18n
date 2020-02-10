@@ -8,6 +8,7 @@ const PRECACHE_URLS = [
     'css/base.css',
     'img/bch.png',
     'js/leaflet/leaflet.js',
+    'index.html',
     'locale/en.json'
 ];
 
