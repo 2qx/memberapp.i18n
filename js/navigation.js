@@ -339,19 +339,19 @@ function showThread(roottxid, txid, articleStyle) {
 }
 
 function showFollowers(qaddress) {
-    getAndPopulateFollowers(qaddress);
+    getAndPopulateFollowAction(qaddress, "followers", "followers");
 }
 
 function showFollowing(qaddress) {
-    getAndPopulateFollowing(qaddress);
+    getAndPopulateFollowAction(qaddress, "following", "following");
 }
 
 function showBlockers(qaddress) {
-    getAndPopulateBlockers(qaddress);
+    getAndPopulateFollowAction(qaddress, "blockers", "blockers");
 }
 
 function showBlocking(qaddress) {
-    getAndPopulateBlocking(qaddress);
+    getAndPopulateFollowAction(qaddress, "blocking", "blocking");
 }
 
 
