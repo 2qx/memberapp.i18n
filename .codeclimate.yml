@@ -1,5 +1,10 @@
-## other configuration excluded from example...
+plugins: 
+  eslint:
+    enabled: true
 exclude_patterns:
-- "tests/"
-- "spec/"
-- "**/vendor/"
+- "js/lib/mde/"
+- "js/lib/rater/"
+- "js/lib/buffer.js"
+- "js/lib/bitboxsdk.js"
+- "js/lib/geohash.js"
+- "js/lib/*.min.js"
