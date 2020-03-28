@@ -4,8 +4,8 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
-    <meta name="description" content="Member is a fully decentralized public platform for discussion">
-    <title>Member</title>
+    <meta name="description" content="member.cash is a fully decentralized public platform for discussion">
+    <title>member.cash</title>
 
     <!--  Only scripts from this website, inline script needed for operation -->
     <!--  Call Memberjs for content -->
@@ -17,7 +17,7 @@
     <!--  Coinmarketcap for latest price -->
 
     <meta http-equiv="Content-Security-Policy"
-        content="default-src 'self' 'unsafe-inline'; connect-src 'self' https://api.coinmarketcap.com/v1/ticker/bitcoin-cash/ https://memberjs.org https://rest.bitcoin.com/v2/ https://memberjs.org:8123/ https://memberjs.org:8124/ http://127.0.0.1:3123/ http://127.0.0.1:3124/; img-src 'self' https://imgur.com https://i.imgur.com/ https://img.youtube.com/vi/ data: https://tile.openstreetmap.org/; frame-src 'self' https://www.youtube.com/  https://twitframe.com/ https://img.youtube.com/vi/;">
+        content="default-src 'self' 'unsafe-inline'; connect-src 'self' https://markets.api.bitcoin.com/live/bitcoin https://memberjs.org https://rest.bitcoin.com/v2/ https://memberjs.org:8123/ https://memberjs.org:8124/ http://127.0.0.1:3123/ http://127.0.0.1:3124/; img-src 'self' https://imgur.com https://i.imgur.com/ https://img.youtube.com/vi/ data: https://tile.openstreetmap.org/; frame-src 'self' https://www.youtube.com/  https://twitframe.com/ https://img.youtube.com/vi/;">
 
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -89,8 +89,26 @@
     <!-- i18n internationalization https://github.com/vavilon-js/vavilon.js-->
     <script src="js/lib/vavilon.min.js"></script>
 
-    <!--  Member Minified Code. -->
-    <script src="js/lib/member.min.js"></script>
+    <!--  Member Minified Code. 
+    <script src="js/lib/member.min.js"></script>-->
+
+    <!--  Member Code. In separate files for development convenience -->
+    <!--  Can be mininfied and amalgamated for releases -->
+
+    <script src="js/utils.js"></script>
+    <script src="js/posts.js"></script>
+    <script src="js/settings.js"></script>
+    <script src="js/follows.js"></script>
+    <script src="js/navigation.js"></script>
+    <script src="js/transactions.js"></script>
+    <script src="js/transactionqueue.js"></script>
+    <script src='js/map.js'></script>
+    <script src='js/trustgraph.js'></script>
+    <script src='js/bootstrapratings.js'></script>
+    <script src="js/login.js"></script>
+    <script src="js/notifications.js"></script>
+    <script src="js/htmlquarantine.js"></script>
+    <script src="js/tools.js"></script>
 
     <div id="map" style="width:100%; height:100%;display:none;"></div>
 
@@ -104,12 +122,12 @@
                     <span class="memberlogo">
                         <a href="./index.html" aria-label="Refresh">
                             <img class="memberlogoimage" src="img/membericon.svg" width="26" height="26"
-                                alt="Member Logo" />
+                                alt="member.cash Logo" />
                         </a>
                     </span>
                     <span class="membertext">
                         <a href="./index.html" aria-label="Member Home">
-                            <b>Member</b>
+                            <b>member.cash</b>
                         </a>
                     </span>
                     <span id="loggedin" style="display:none;">
@@ -120,7 +138,7 @@
                                 href="#myfeed" onclick="showMyFeed();">📰</a>
                             <a id="notificationsbutton" title="Notifications" class="btn" href="#notifications?start=0"
                                 onclick="showNotifications(0,numbers.results,'notifications');">🔔<span
-                                    class="alertcount" id="alertcount"></span></a>
+                                    class="alertcount noselect" id="alertcount"></span></a>
                             <a id="newbutton" title="New Post" class="btn newpostbutton" href="#new"
                                 onclick="showNewPost();">📝</a>
                             <a id="settingsbutton" title="Settings" class="btn" href="#settings"
@@ -190,21 +208,29 @@
         </header>
         <div class="mainbody">
             <div id="toolsanchor" class="applicationpage" style="display: none;">
+                <h2 class="vavilon" data-vavilon="Tools">Tools</h2>
                 <br />
                 <div id="usersearchcontainer">
                     <label for="usersearch">Member Search</label>
-                    <input class="usersearch" id="usersearch" maxlength="217" onchange="userSearchChanged();"
+                    <input class="usersearch" id="usersearch" maxlength="217" onchange="userSearchChanged('usersearch','usersearchresults');"
                         onkeypress="this.onchange();" onpaste="this.onchange();" oninput="this.onchange();">
                     <br />
-                    <label for="usersearchresults">Results</label>
                     <div id="usersearchresults"></div>
                 </div>
-                <div id="surrogatecontainer" style="display: none;">
-                    <p>If a person, organization, country, planet, galaxy etc is not on Member yet, but you want to make
-                        a reputational rating, you can create a Surrogate Member account. '(Surrogate)' will follow the
+                <div id="surrogatecontainer">
+                    <label for="surrogatename">Create Surrogate Member Account</label>
+                    <p>You can create a Surrogate Member account if you want to rate a user or organization that does
+                        not have their own Member account yet. '(Surrogate)' will follow the
                         handle to indicate the account is not claiming the identity, just acting as a receptacle for
                         reputational information.
                     </p>
+                    <input class="surrogatename" id="surrogatename" maxlength="200" onchange="userSearchChanged('surrogatename','surrogatesearchresults');"
+                    onkeypress="this.onchange();" onpaste="this.onchange();" oninput="this.onchange();">
+                    <button id="createsurrogatebutton" type="button" onclick="createSurrogate();" class="vavilon"
+                        data-vavilon="Create Surrogate">Create Surrogate Account</button>
+                    <br />
+                    <div id="surrogatelink"></div>
+                    <div id="surrogatesearchresults"></div>
                 </div>
             </div>
             <div id="newpost" class="applicationpage newpost" style="display: none;">
@@ -785,9 +811,9 @@
             <footer>
                 <hr />
                 <span id="developmentversion" style="display: none;">You're viewing the development preview version of
-                    Member. You may need to SHIFT + Reload to get the very latest changes. Generally, It's recommend to
-                    <a href="https://memberapp.github.io">use the stable version at
-                        https://memberapp.github.io</a><br /><br />
+                    member.cash You may need to SHIFT + Reload to get the very latest changes. Generally, It's recommend to
+                    <a href="https://member.cash">use the stable version at
+                        https://member.cash</a><br /><br />
                     <hr /></span>
                 <span class="footerlinks">
                     <a
