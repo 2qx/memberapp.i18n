@@ -1,3 +1,6 @@
+[![Maintainability](https://api.codeclimate.com/v1/badges/a2dda53ecf63904cda36/maintainability)](https://codeclimate.com/github/2qx/memberdev/maintainability)
+[![Build Status](https://travis-ci.org/2qx/memberdev.svg?branch=master)](https://travis-ci.org/2qx/memberdev)
+
 Member
 ------
 

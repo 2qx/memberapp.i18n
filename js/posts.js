@@ -523,6 +523,10 @@ function showMore(show, hide) {
     return true;
 }
 
+function clearButtonDisplay(prefix){
+    document.getElementById(prefix + 'button').style.display = "none";
+    document.getElementById(prefix + 'status').style.display = "block";
+}
 
 function topictitleChanged(elementName) {
     if (document.getElementById(elementName + 'topic').value.length == 0) {
@@ -548,8 +552,7 @@ function geopost(lat, long) {
     var geohash = encodeGeoHash(document.getElementById("lat").value, document.getElementById("lon").value);
 
     document.getElementById('newpostgeocompleted').innerText = "";
-    document.getElementById('newpostgeobutton').style.display = "none";
-    document.getElementById('newpostgeostatus').style.display = "block";
+    clearButtonDisplay('newpostgeo')
     document.getElementById('newpostgeostatus').value = "Posting...";
 
     postgeoRaw(posttext, privkey, geohash, "newpostgeostatus", geocompleted);
@@ -568,8 +571,7 @@ function post() {
     var topic = document.getElementById('memotopic').value;
 
     document.getElementById('newpostcompleted').innerText = "";
-    document.getElementById('newpostbutton').style.display = "none";
-    document.getElementById('newpoststatus').style.display = "block";
+    clearButtonDisplay('newposts');
     document.getElementById('newpoststatus').value = "Sending Memo...";
 
     postRaw(posttext, privkey, topic, "newpoststatus", memocompleted);
@@ -596,8 +598,7 @@ function postmemorandum() {
     //topic may be empty string
 
     document.getElementById('newpostmemorandumcompleted').innerText = "";
-    document.getElementById('newpostmemorandumbutton').style.display = "none";
-    document.getElementById('newpostmemorandumstatus').style.display = "block";
+    clearButtonDisplay('newpostmemorandum')
     document.getElementById('newpostmemorandumstatus').value = "Sending Title...";
 
 
@@ -613,9 +614,12 @@ function setPostCompleted(staleFormElements, elementStatusPrefix){
     for (const elementId of staleFormElements) {
         document.getElementById(elementId).value = "";
       }
-      document.getElementById(elementStatusPrefix + 'status').style.display = "none";
-      document.getElementById(elementStatusPrefix + 'button').style.display = "block";
-      document.getElementById(elementStatusPrefix + 'completed').innerHTML = "Message Sent. ";
+      clearStatus(elementStatusPrefix)
+}
+
+function clearStatus(elementStatusPrefix){
+    clearButtonDisplay(elementStatusPrefix)
+    document.getElementById(elementStatusPrefix + 'completed').innerHTML = "Message Sent. ";
 }
 
 function memorandumpostcompleted() {
