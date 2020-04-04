@@ -339,19 +339,19 @@ function showThread(roottxid, txid, articleStyle) {
 }
 
 function showFollowers(qaddress) {
-    getAndPopulateFollowAction(qaddress, "followers", "followers", "follows");
+    getAndPopulateFollowAction(qaddress, "followers", "followers", "follows", "Follows");
 }
 
 function showFollowing(qaddress) {
-    getAndPopulateFollowAction(qaddress, "following", "following", "followingtable");
+    getAndPopulateFollowAction(qaddress, "following", "following", "followingtable", "Follows");
 }
 
 function showBlockers(qaddress) {
-    getAndPopulateFollowAction(qaddress, "blockers", "blockers", "blocks");
+    getAndPopulateFollowAction(qaddress, "blockers", "blockers", "blocks", "Mutes");
 }
 
 function showBlocking(qaddress) {
-    getAndPopulateFollowAction(qaddress, "blocking", "blocking", "blockingtable");
+    getAndPopulateFollowAction(qaddress, "blocking", "blocking", "blockingtable", "Mutes");
 }
 
 

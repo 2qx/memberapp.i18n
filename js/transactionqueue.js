@@ -315,7 +315,7 @@ class TransactionQueue {
       returnObject.queue.shift();
       if (successCallback) {
         successCallback(res)
-      };
+      }
       //1 second wait to avoid mem-pool confusion
       await sleep(1000);
       returnObject.sendNextTransaction();

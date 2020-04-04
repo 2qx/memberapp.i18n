@@ -183,8 +183,18 @@ function setProfile() {
     tq.queueTransaction(tx);
 }
 
+function sub(topicHOSTILE){
+    handleSubscriptionChange(topicHOSTILE, true)
+}
 
-function sub(topicHOSTILE) {
+function unsub(topicHOSTILE){
+    handleSubscriptionChange(topicHOSTILE, false)
+}
+
+function handleSubscriptionChange(topicHOSTILE, isSubscribe = false) {
+
+    code = (isSubscribe ?  "0x6d0d" : "0x6d0e")
+    statusText = (isSubscribe ?  "Sending Subscribe" : "Sending Unsubscribe")
 
     if (!checkForPrivKey()) return false;
 
@@ -199,19 +209,6 @@ function sub(topicHOSTILE) {
     tq.queueTransaction(tx);
 }
 
-function unsub(topicHOSTILE) {
-    if (!checkForPrivKey()) return false;
-
-    //Remove the clicked element so it can't be clicked again
-    event.srcElement.style.display = "none";
-
-    const tx = {
-        data: ["0x6d0e", topicHOSTILE],
-        cash: { key: privkey }
-    }
-    updateStatus("Sending Unsubscribe");
-    tq.queueTransaction(tx);
-}
 
 function addressTransaction(removeElementID, qaddress, actionCode, statusMessage) {
     if (!checkForPrivKey()) return false;

@@ -506,7 +506,7 @@ function getHTMLForTopicArray(data) {
 
     ret += `<tr style='display:none' id='modmore` + data[0].mostrecent + `'><td colspan='4'>`;
     if(data[0].topic!=""){
-        ret += clickActionNamedHTML("unsub", data.topicname, "Unsubscribe") + "<br/>";
+        ret += clickActionNamedHTML("unsub", data.topicname, false, "Unsubscribe") + "<br/>";
     }
     var alreadymod = false;
     for (var i = 0; i < data.length; i++) {
@@ -535,7 +535,7 @@ function getHTMLForTopicArray(data) {
 
 function getHTMLForTopic(data) {
     var ret = "";
-    var subscribe = clickActionNamedHTML("sub", data.topicname, "sub");
+    var subscribe = clickActionNamedHTML("sub", data.topicname, true, "sub");
 
     //Show more button if the user is subscribed or topic is emtpy string
     if (data.address != null || data.topicname=="") {
