@@ -32,7 +32,6 @@ function getAndPopulateMap(geohash, posttrxid) {
         att2.addAttribution(getOSMattributionHTML()).setPosition('bottomright').addTo(map);
 
         //Popup for thread related to location
-        //popup = L.popup({ autoPan: true, minWidth: 550, maxWidth: getWidth(), maxHeight: getHeight() });
         popup = L.popup({ autoPan: true });
         postpopup = L.popup({ autoPan: true, minWidth: 300 });
     }
