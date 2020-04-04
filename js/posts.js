@@ -609,27 +609,31 @@ function postmemorandum() {
     //}
 }
 
-function memorandumpostcompleted() {
-    document.getElementById('memorandumtitle').value = "";
-    document.getElementById('newposttamemorandum').value = "";
-    document.getElementById('newpostmemorandumstatus').style.display = "none";
-    document.getElementById('newpostmemorandumbutton').style.display = "block";
-    document.getElementById('newpostmemorandumcompleted').innerHTML = "Message Sent. ";
+function setPostCompleted(staleFormElements, elementStatusPrefix){
+    for (const elementId of staleFormElements) {
+        document.getElementById(elementId).value = "";
+      }
+      document.getElementById(elementStatusPrefix + 'status').style.display = "none";
+      document.getElementById(elementStatusPrefix + 'button').style.display = "block";
+      document.getElementById(elementStatusPrefix + 'completed').innerHTML = "Message Sent. ";
+}
 
+function memorandumpostcompleted() {
+    var staleFormElements = ['memorandumtitle','newposttamemorandum'];
+    var elementStatusPrefix = 'newpostmemorandum';
+    setPostCompleted(staleFormElements, elementStatusPrefix)
 }
 
 function memocompleted() {
-    document.getElementById('memotitle').value = "";
-    document.getElementById('newpoststatus').style.display = "none";
-    document.getElementById('newpostbutton').style.display = "block";
-    document.getElementById('newpostcompleted').innerHTML = "Message Sent. ";
+    var staleFormElements = ['memotitle'];
+    var elementStatusPrefix = 'newpost';
+    setPostCompleted(staleFormElements, elementStatusPrefix)
 }
 
 function geocompleted() {
-    document.getElementById('newgeopostta').value = "";
-    document.getElementById('newpostgeostatus').style.display = "none";
-    document.getElementById('newpostgeobutton').style.display = "block";
-    document.getElementById('newpostgeocompleted').innerHTML = "Message Sent. ";
+    var staleFormElements = ['newgeopostta'];
+    var elementStatusPrefix = 'newpostgeo';
+    setPostCompleted(staleFormElements, elementStatusPrefix)
 }
 
 
