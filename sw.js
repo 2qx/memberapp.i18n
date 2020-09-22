@@ -21,7 +21,6 @@ const INSTALL = 'install-' + version;
 
 self.addEventListener('install', (event) => {
     self.skipWaiting()
-    console.log('[ServiceWorker] Install.');
     event.waitUntil(
         caches.open(INSTALL).then((cache) => {
             return cache.addAll(PRECACHE_URLS);
