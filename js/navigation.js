@@ -6,21 +6,29 @@ function displayContentBasedOnURLParameters() {
 
     var url = window.location.href;
 
-    var action = sanitizeAlphanumeric(url.substring(url.indexOf('#') + 1).toLowerCase());
+    var action;
+
+    if(url.indexOf('#')==-1){
+        //navigation back to home page, clear topic
+        setTopic("");
+        action="";
+    }else{
+        action = sanitizeAlphanumeric(url.substring(url.indexOf('#') + 1).toLowerCase());
+    }
 
     if (action.startsWith("show")) {
-        setOrder('orderselector',getParameterByName("order"));
-        setOrder('contentselector',getParameterByName("content"));
+        setOrder('orderselector', getParameterByName("order"));
+        setOrder('contentselector', getParameterByName("content"));
         setTopic(getParameterByName("topicname"));
-        setOrder('filterselector',getParameterByName("filter"));
-        
+        setOrder('filterselector', getParameterByName("filter"));
+
         showPostsNew(
             sanitizeAlphanumeric(getParameterByName("order")),
             sanitizeAlphanumeric(getParameterByName("content")),
             getParameterByName("topicname"), //HOSTILE
             sanitizeAlphanumeric(getParameterByName("filter")),
-            Number(getParameterByName("start")), 
-            Number(getParameterByName("limit")), 
+            Number(getParameterByName("start")),
+            Number(getParameterByName("limit")),
         );
     } else if (action.startsWith("memberposts")) {
         showMemberPosts(Number(getParameterByName("start")), Number(getParameterByName("limit")), sanitizeAlphanumeric(getParameterByName("qaddress")));
@@ -54,9 +62,9 @@ function displayContentBasedOnURLParameters() {
         //Warning - topicname may contain special characters
         showTopic(Number(getParameterByName("start")), Number(getParameterByName("limit")), getParameterByName("topicname"), sanitizeAlphanumeric(getParameterByName("type")));
     } else if (action.startsWith("article")) {
-        showThread(sanitizeAlphanumeric(getParameterByName("root")), sanitizeAlphanumeric(getParameterByName("post")),true);
+        showThread(sanitizeAlphanumeric(getParameterByName("root")), sanitizeAlphanumeric(getParameterByName("post")), true);
     } else if (action.startsWith("thread")) {
-        showThread(sanitizeAlphanumeric(getParameterByName("root")), sanitizeAlphanumeric(getParameterByName("post")),false);
+        showThread(sanitizeAlphanumeric(getParameterByName("root")), sanitizeAlphanumeric(getParameterByName("post")), false);
     } else if (action.startsWith("settings")) {
         showSettings();
     } else if (action.startsWith("new")) {
@@ -65,11 +73,13 @@ function displayContentBasedOnURLParameters() {
         showMap(sanitizeAlphanumeric(getParameterByName("geohash")), sanitizeAlphanumeric(getParameterByName("post")));
     } else if (action.startsWith("myfeed")) {
         showMyFeed();
+    } else if (action.startsWith("tools")) {
+        showTools();
     } else if (action.startsWith("login")) {
         if (pubkey == "" || pubkey == null || pubkey == undefined) {
             showLogin();
-        }else{
-            showPosts(0, numbers.results, 'all');    
+        } else {
+            showPosts(0, numbers.results, 'all');
         }
     } else {
         showPosts(0, numbers.results, 'all');
@@ -91,7 +101,7 @@ function hideAll() {
     document.getElementById('thread').innerHTML = "";
     document.getElementById('memberposts').innerHTML = "";
     document.getElementById('notifications').innerHTML = "";
-    
+
     document.getElementById('settingsanchor').style.display = "none";
     document.getElementById('loginbox').style.display = "none";
     document.getElementById('followers').style.display = "none";
@@ -106,12 +116,16 @@ function hideAll() {
     document.getElementById('bootstrap').style.display = "none";
     document.getElementById('community').style.display = "none";
     document.getElementById('topiclistanchor').style.display = "none";
-
+    document.getElementById('toolsanchor').style.display = "none";
 }
 
 function show(theDiv) {
     hideAll();
     document.getElementById(theDiv).style.display = "block";
+}
+
+function showTools() {
+    show('toolsanchor');
 }
 
 function showLogin() {
@@ -143,8 +157,8 @@ function showBootstrap(qaddress) {
 
 function showNewPost() {
     show("newpost");
-    document.getElementById('memorandumpreview').innerHTML="";
-    let topicNameHOSTILE=getCurrentTopicHOSTILE();
+    document.getElementById('memorandumpreview').innerHTML = "";
+    let topicNameHOSTILE = getCurrentTopicHOSTILE();
     document.getElementById('memotopic').value = topicNameHOSTILE;
     document.getElementById('memorandumtopic').value = topicNameHOSTILE;
     if (topicNameHOSTILE != "") {
@@ -158,19 +172,25 @@ function showNewPost() {
     topictitleChanged("memorandum");
     topictitleChanged("memo");
     document.getElementById('newpostbutton').style.display = "block";
-    initMarkdownEditor();
+
+    //Markdown editor doesn't seem to work well on Android
+    var ua = navigator.userAgent.toLowerCase();
+    var isAndroid = ua.indexOf("android") > -1;
+    if (!isAndroid) {
+        initMarkdownEditor();
+    }
 }
 
 
 function showNotifications(start, limit) {
-    
+
     if (pubkey == "" || pubkey == null || pubkey == undefined) {
         showPosts(0, numbers.results, 'all');
         return;
     }
-    
+
     getAndPopulateNotifications(start, limit, "notifications", pubkey);
-     
+
 }
 
 function showSettings() {
@@ -217,17 +237,17 @@ function showComments(start, limit, type) {
     showPFC(start, limit, 'replies', pubkey, type);
 }
 
-function showPFC(start, limit, page, pubkey, type){
+function showPFC(start, limit, page, pubkey, type) {
     //getAndPopulate(start, limit, page, pubkey, type, getCurrentTopicHOSTILE());
     showPostsNew('hot', page, getCurrentTopicHOSTILE(), 'everyone', start, limit)
 }
 
-function showMyFeed(){
-    getAndPopulateNew('new', 'posts', 'myfeed', 'myfeed', 0, numbers.results, 'posts', pubkey); 
+function showMyFeed() {
+    getAndPopulateNew('new', 'posts', 'myfeed', 'myfeed', 0, numbers.results, 'posts', pubkey);
 }
 
-function showPostsNew(order, content, topicnameHOSTILE, filter, start, limit){
-    getAndPopulateNew(order, content, topicnameHOSTILE, filter, start, limit, 'posts', pubkey); 
+function showPostsNew(order, content, topicnameHOSTILE, filter, start, limit) {
+    getAndPopulateNew(order, content, topicnameHOSTILE, filter, start, limit, 'posts', pubkey);
 }
 
 
@@ -235,45 +255,45 @@ function showPostsNew(order, content, topicnameHOSTILE, filter, start, limit){
 function showTopic(start, limit, topicnameHOSTILE, type) {
     //Warning, topicname may contain hostile characters
     setTopic(topicnameHOSTILE);
-    if(type=="")type="new";
-    getAndPopulateNew(type, 'posts', topicnameHOSTILE, 'everyone', start, limit, 'posts', pubkey); 
+    if (type == "") type = "new";
+    getAndPopulateNew(type, 'posts', topicnameHOSTILE, 'everyone', start, limit, 'posts', pubkey);
     //getAndPopulate(start, limit, 'posts', pubkey, type, topicNameHOSTILE);
 }
 
-function getCurrentTopicHOSTILE(){
-    var selector=document.getElementById('topicselector');
-    var topicNameHOSTILE=selector.options[selector.selectedIndex].value;
+function getCurrentTopicHOSTILE() {
+    var selector = document.getElementById('topicselector');
+    var topicNameHOSTILE = selector.options[selector.selectedIndex].value;
     return topicNameHOSTILE;
 }
 
-function showTopicList(){
-    getAndPopulateTopicList(true); 
+function showTopicList() {
+    getAndPopulateTopicList(true);
 }
 
-function postsSelectorChanged(){
-    
+function postsSelectorChanged() {
+
     //get value from the 4 drop downs
     var selector;
 
     //orderselector
-    selector=document.getElementById('orderselector');
-    var order=selector.options[selector.selectedIndex].value;
-    
+    selector = document.getElementById('orderselector');
+    var order = selector.options[selector.selectedIndex].value;
+
     //contentselector
-    selector=document.getElementById('contentselector');
-    var content=selector.options[selector.selectedIndex].value;
-    
+    selector = document.getElementById('contentselector');
+    var content = selector.options[selector.selectedIndex].value;
+
     //topicselector
-    selector=document.getElementById('topicselector');
-    var topicNameHOSTILE=selector.options[selector.selectedIndex].value;
-    
+    selector = document.getElementById('topicselector');
+    var topicNameHOSTILE = selector.options[selector.selectedIndex].value;
+
     //filterselector
-    selector=document.getElementById('filterselector');
-    var filter=selector.options[selector.selectedIndex].value;
-    
+    selector = document.getElementById('filterselector');
+    var filter = selector.options[selector.selectedIndex].value;
+
     //set the document location
-    document.location.href="#show?order="+order+"&content="+content+"&topicname="+encodeURIComponent(topicNameHOSTILE)+"&filter="+filter+"&start=0&limit="+Number(numbers.results);
-    
+    document.location.href = "#show?order=" + order + "&content=" + content + "&topicname=" + encodeURIComponent(topicNameHOSTILE) + "&filter=" + filter + "&start=0&limit=" + Number(numbers.results);
+
     //topicChanged();
 
     //show the posts
@@ -286,57 +306,57 @@ function postsSelectorChanged(){
     //document.getElementById('memorandumtopic').value = "";
     enterTopic("");    
 }*/
-function setOrder(selectorvalue,order){
-    var selector=document.getElementById(selectorvalue);
-    for(var i=0;i<selector.length;i++){
-        if(selector.options[i].value==order){
-            selector.selectedIndex=i;
+function setOrder(selectorvalue, order) {
+    var selector = document.getElementById(selectorvalue);
+    for (var i = 0; i < selector.length; i++) {
+        if (selector.options[i].value == order) {
+            selector.selectedIndex = i;
         }
     }
 }
 
 
-function setTopic(topicNameHOSTILE){
+function setTopic(topicNameHOSTILE) {
     //Warning, topicname may contain hostile characters
-    var selector=document.getElementById('topicselector');
+    var selector = document.getElementById('topicselector');
 
-    if(topicNameHOSTILE==null || topicNameHOSTILE==""){
-        selector.selectedIndex=0;
+    if (topicNameHOSTILE == null || topicNameHOSTILE == "") {
+        selector.selectedIndex = 0;
         return;
     }
-    
-    selector.selectedIndex=1;
-    selector.options[selector.selectedIndex].value=topicNameHOSTILE;
-    selector.options[selector.selectedIndex].text=capitalizeFirstLetter(topicNameHOSTILE.substring(0,13));
+
+    selector.selectedIndex = 1;
+    selector.options[selector.selectedIndex].value = topicNameHOSTILE;
+    selector.options[selector.selectedIndex].text = capitalizeFirstLetter(topicNameHOSTILE.substring(0, 13));
 }
 
 
 function showThread(roottxid, txid, articleStyle) {
     getAndPopulateThread(roottxid, txid, 'thread');
-    if(articleStyle){
+    if (articleStyle) {
         setAddonStyle("article.css");
     }
 }
 
 function showFollowers(qaddress) {
-    getAndPopulateFollowers(qaddress);
+    getAndPopulateFollowAction(qaddress, "followers", "followers", "follows", "Follows");
 }
 
 function showFollowing(qaddress) {
-    getAndPopulateFollowing(qaddress);
+    getAndPopulateFollowAction(qaddress, "following", "following", "followingtable", "Follows");
 }
 
 function showBlockers(qaddress) {
-    getAndPopulateBlockers(qaddress);
+    getAndPopulateFollowAction(qaddress, "blockers", "blockers", "blocks", "Mutes");
 }
 
 function showBlocking(qaddress) {
-    getAndPopulateBlocking(qaddress);
+    getAndPopulateFollowAction(qaddress, "blocking", "blocking", "blockingtable", "Mutes");
 }
 
 
 //suspend back/forward detection for map panning
-var suspendPageReload=false;
+var suspendPageReload = false;
 
 var detectBackOrForward = function (onBack, onForward) {
     //Note, sometimes onForward is being called even though it a regular navigation click event
@@ -349,10 +369,10 @@ var detectBackOrForward = function (onBack, onForward) {
         if (hashHistory.length && historyLength == length) {
             if (hashHistory[hashHistory.length - 2] == hash) {
                 hashHistory = hashHistory.slice(0, -1);
-                if(!suspendPageReload)onBack();
+                if (!suspendPageReload) onBack();
             } else {
                 hashHistory.push(hash);
-                if(!suspendPageReload)onForward();
+                if (!suspendPageReload) onForward();
             }
         } else {
             hashHistory.push(hash);

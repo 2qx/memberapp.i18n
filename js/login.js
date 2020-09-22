@@ -1,6 +1,10 @@
 
 "use strict";
 
+//Preferable to grab this from sw.js, but don't know how.
+//So must be entered in two places
+var version = "3.7.4";
+
 var pubkey = ""; //Public Key (Legacy)
 var mnemonic = ""; //Mnemonic BIP39
 var privkey = ""; //Private Key
@@ -14,7 +18,6 @@ var maxfee = 5;
 var mapTileProvider = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 
 const DATABASE = 'messagesDB'
-const version = '3.5.5.9';
 var dbs = new Map(); // name --> Promise<IDBDatabase>
 const MESSAGE_ENDPOINTS = ["thread","map","show"]
 
@@ -33,10 +36,11 @@ var dropdowns = {
     "currencydisplay": "USD"
 };
 var numbers = {
-    "defaulttip" : 1000,
-    "oneclicktip" : 0,
-    "maxfee" : 2,
-    "results" : 25
+    "defaulttip": 1000,
+    "oneclicktip": 0,
+    "maxfee": 2,
+    "results": 25,
+    "usdrate": 0
 }
 
 
@@ -61,12 +65,12 @@ window.onbeforeunload = function () {
 };
 
 function init() {
-    getLatestUSDrate();
+    document.getElementById('version').innerHTML = version;
     setLang((navigator.language || navigator.userLanguage));
     //check local app storage for key
 
     //Show message if dev version in use
-    if (document.location.host != 'memberapp.github.io') {
+    if (document.location.href.indexOf('freetrade.github.io/memberdev') != -1) {
         document.getElementById('developmentversion').style.display = 'block';
     }
     var loginmnemonic = localStorageGet(localStorageSafe, "mnemonic");
@@ -87,15 +91,16 @@ function init() {
     assureDB();
 }
 
-function getAndSetVersion(){
+//This method doesn't appear to be in use, also doesn't seem to work
+function getAndSetVersion() {
     fetch('/version')
-    .then(function(response){
-        return response.text()
-    }).then(function(version){
-        console.log("member" + version);
-        let ver_split = version.lastIndexOf('.');
-        document.getElementById('version').innerHTML = version.substring(0, ver_split) + ".<u>" +version.substring(ver_split+1) +"</u>";
-    });
+        .then(function (response) {
+            return response.text()
+        }).then(function (version) {
+            console.log("member" + version);
+            let ver_split = version.lastIndexOf('.');
+            document.getElementById('version').innerHTML = version.substring(0, ver_split) + ".<u>" + version.substring(ver_split + 1) + "</u>";
+        });
 }
 
 function trylogin(loginkey) {
@@ -170,7 +175,7 @@ function login(loginkey) {
 
     lastViewOfNotifications = Number(localStorageGet(localStorageSafe, "lastViewOfNotifications"));
     localStorageSet(localStorageSafe, "pubkey", pubkey);
-    tq.addUTXOPool(pubkey, localStorageSafe);
+    tq.addUTXOPool(pubkey, localStorageSafe, "balance");
     document.getElementById('loggedin').style.display = "inline";
     document.getElementById('loggedout').style.display = "none";
     getAndPopulateSettings();

@@ -183,41 +183,6 @@ function capitalizeFirstLetter(string) {
   return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
-function getHeight() {
-  var myWidth = 0, myHeight = 0;
-  if (typeof (window.innerWidth) == 'number') {
-    //Non-IE
-    myWidth = window.innerWidth;
-    myHeight = window.innerHeight;
-  } else if (document.documentElement && (document.documentElement.clientWidth || document.documentElement.clientHeight)) {
-    //IE 6+ in 'standards compliant mode'
-    myWidth = document.documentElement.clientWidth;
-    myHeight = document.documentElement.clientHeight;
-  } else if (document.body && (document.body.clientWidth || document.body.clientHeight)) {
-    //IE 4 compatible
-    myWidth = document.body.clientWidth;
-    myHeight = document.body.clientHeight;
-  }
-  return myHeight;
-}
-
-function getWidth() {
-  var myWidth = 0, myHeight = 0;
-  if (typeof (window.innerWidth) == 'number') {
-    //Non-IE
-    myWidth = window.innerWidth;
-    myHeight = window.innerHeight;
-  } else if (document.documentElement && (document.documentElement.clientWidth || document.documentElement.clientHeight)) {
-    //IE 6+ in 'standards compliant mode'
-    myWidth = document.documentElement.clientWidth;
-    myHeight = document.documentElement.clientHeight;
-  } else if (document.body && (document.body.clientWidth || document.body.clientHeight)) {
-    //IE 4 compatible
-    myWidth = document.body.clientWidth;
-    myHeight = document.body.clientHeight;
-  }
-  return myWidth;
-}
 
 String.prototype.contains = function (segment) { return this.indexOf(segment) !== -1; };
 
@@ -269,14 +234,15 @@ function localStorageSet(theSO, itemName, theString) {
 }
 
 
-var usdrate = 266.75;
+//var usdrate = 266.75;
 
 function getLatestUSDrate() {
-  getJSON(`https://api.coinmarketcap.com/v1/ticker/bitcoin-cash/`).then(function (data) {
-    usdrate = Number(data[0].price_usd);
-    updateStatus("Got updated exchange rate:" + usdrate);
+  getJSON(`https://markets.api.bitcoin.com/live/bitcoin`).then(function (data) {
+    document.getElementById("usdrate").value = Number(data.data.BCH);
+    updateSettingsNumber('usdrate');
+    updateStatus("Got updated exchange rate:" + numbers.usdrate);
     try{
-      tq.updateBalance();
+      tq.updateBalance("balance");
     }catch(err){}
   }, function (status) { //error detection....
     console.log('Failed to get usd rate:' + status);
@@ -285,7 +251,7 @@ function getLatestUSDrate() {
 }
 
 function balanceString(total, includeSymbol) {
-  if (dropdowns.currencydisplay == "BCH") {
+  if (dropdowns.currencydisplay == "BCH" || numbers.usdrate===undefined|| numbers.usdrate===0) {
     var balString = (Number(total) / 1000).toFixed(3);
     balString = Number(balString.substr(0, balString.length - 4)).toLocaleString() + "<span class='sats'>" + balString.substr(balString.length - 3, 3) + "</span>";
     if (includeSymbol) {
@@ -294,7 +260,7 @@ function balanceString(total, includeSymbol) {
       return balString + " sats ";
     }
   }
-  var usd = ((Number(total) * usdrate) / 100000000).toFixed(2);
+  var usd = ((Number(total) * numbers.usdrate) / 100000000).toFixed(2);
   if (usd < 1) {
     return (usd * 100).toFixed(0) + "¢";
   } else {

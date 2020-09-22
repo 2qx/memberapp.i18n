@@ -1,0 +1,10 @@
+plugins: 
+  eslint:
+    enabled: true
+exclude_patterns:
+- "js/lib/mde/"
+- "js/lib/rater/"
+- "js/lib/buffer.js"
+- "js/lib/bitboxsdk.js"
+- "js/lib/geohash.js"
+- "js/lib/*.min.js"

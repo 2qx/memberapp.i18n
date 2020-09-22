@@ -154,27 +154,30 @@ function getAndPopulateTopicList(showpage) {
     document.getElementById(page).innerHTML = document.getElementById("loading").innerHTML;
     fetchJSON(dropdowns.contentserver + '?action=topiclist&qaddress=' + pubkey).then(function (data) {
 
-        var selectboxIndex=5;
+        var selectboxIndex = 5;
         var selectbox = document.getElementById('topicselector');
         while (selectbox.options[selectboxIndex]) {
             selectbox.remove(selectboxIndex)
         }
 
-        
-        var lastValue="";
+
+        var lastValue = "";
         for (var i = 0; i < 40; i++) {
             var option = document.createElement("option");
             //Caution, topicname can contain anything
+            if(data[i].topicname==null) continue;
+
             option.text = capitalizeFirstLetter(data[i].topicname.substr(0, 13));
             option.value = data[i].topicname;
-            if(option.value==lastValue) continue;
-            lastValue=option.value;
+            if (option.value == lastValue) continue;
+            lastValue = option.value;
             selectbox.add(option, [selectboxIndex]);
             selectboxIndex++;
         }
 
         var contents = "<br/><table><tr><td class='tltopicname'>Topic</td><td class='tlmessagescount'>Posts</td><td class='tlsubscount'>Subs</td><td class='tlaction'>Action</td></tr>";
 
+        //group data rows by moderater before displaying
         var modsArray = [];
         for (var i = 0; i < data.length; i++) {
             if (i == 0 || (i < data.length && data[i].topicname == data[i - 1].topicname)) {
@@ -185,6 +188,8 @@ function getAndPopulateTopicList(showpage) {
                 modsArray.push(data[i]);
             }
         }
+
+
         contents += "</table>";
         //Threads have no navbuttons
         //displayItemListandNavButtonsHTML(contents, "", "thread", data, "",0);
@@ -293,23 +298,25 @@ function addSingleStarsRating(disable, theElement) {
 var simplemde;
 
 function initMarkdownEditor() {
-    simplemde = new SimpleMDE({
-        element: document.getElementById("newposttamemorandum"),
-        autoDownloadFontAwesome: false,
-        autosave: {
-            enabled: true,
-            uniqueId: "MyUniqueID",
-            delay: 10000,
-        },
-        forceSync: true,
-        promptURLs: true,
-        spellChecker: false,
-        showIcons: ["code", "table", "strikethrough", "heading-1", "heading-2", "heading-3", "quote"],
-        hideIcons: ["preview", "side-by-side", "fullscreen", "guide", "heading"]
-    });
-    simplemde.codemirror.on("change", function () {
-        memorandumPreview();
-    });
+    if (simplemde == null) {
+        simplemde = new SimpleMDE({
+            element: document.getElementById("newposttamemorandum"),
+            autoDownloadFontAwesome: false,
+            autosave: {
+                enabled: true,
+                uniqueId: "MyUniqueID",
+                delay: 10000,
+            },
+            forceSync: true,
+            promptURLs: true,
+            spellChecker: false,
+            showIcons: ["code", "table", "strikethrough", "heading-1", "heading-2", "heading-3", "quote"],
+            hideIcons: ["preview", "side-by-side", "fullscreen", "guide", "heading"]
+        });
+        simplemde.codemirror.on("change", function () {
+            memorandumPreview();
+        });
+    }
     memorandumPreview();
 
 }
@@ -514,6 +521,10 @@ function showMore(show, hide) {
     return true;
 }
 
+function clearButtonDisplay(prefix){
+    document.getElementById(prefix + 'button').style.display = "none";
+    document.getElementById(prefix + 'status').style.display = "block";
+}
 
 function topictitleChanged(elementName) {
     if (document.getElementById(elementName + 'topic').value.length == 0) {
@@ -539,8 +550,7 @@ function geopost(lat, long) {
     var geohash = encodeGeoHash(document.getElementById("lat").value, document.getElementById("lon").value);
 
     document.getElementById('newpostgeocompleted').innerText = "";
-    document.getElementById('newpostgeobutton').style.display = "none";
-    document.getElementById('newpostgeostatus').style.display = "block";
+    clearButtonDisplay('newpostgeo')
     document.getElementById('newpostgeostatus').value = "Posting...";
 
     postgeoRaw(posttext, privkey, geohash, "newpostgeostatus", geocompleted);
@@ -559,8 +569,7 @@ function post() {
     var topic = document.getElementById('memotopic').value;
 
     document.getElementById('newpostcompleted').innerText = "";
-    document.getElementById('newpostbutton').style.display = "none";
-    document.getElementById('newpoststatus').style.display = "block";
+    clearButtonDisplay('newposts');
     document.getElementById('newpoststatus').value = "Sending Memo...";
 
     postRaw(posttext, privkey, topic, "newpoststatus", memocompleted);
@@ -587,8 +596,7 @@ function postmemorandum() {
     //topic may be empty string
 
     document.getElementById('newpostmemorandumcompleted').innerText = "";
-    document.getElementById('newpostmemorandumbutton').style.display = "none";
-    document.getElementById('newpostmemorandumstatus').style.display = "block";
+    clearButtonDisplay('newpostmemorandum')
     document.getElementById('newpostmemorandumstatus').value = "Sending Title...";
 
 
@@ -600,27 +608,34 @@ function postmemorandum() {
     //}
 }
 
-function memorandumpostcompleted() {
-    document.getElementById('memorandumtitle').value = "";
-    document.getElementById('newposttamemorandum').value = "";
-    document.getElementById('newpostmemorandumstatus').style.display = "none";
-    document.getElementById('newpostmemorandumbutton').style.display = "block";
-    document.getElementById('newpostmemorandumcompleted').innerHTML = "Message Sent. ";
+function setPostCompleted(staleFormElements, elementStatusPrefix){
+    for (const elementId of staleFormElements) {
+        document.getElementById(elementId).value = "";
+      }
+      clearStatus(elementStatusPrefix)
+}
 
+function clearStatus(elementStatusPrefix){
+    clearButtonDisplay(elementStatusPrefix)
+    document.getElementById(elementStatusPrefix + 'completed').innerHTML = "Message Sent. ";
+}
+
+function memorandumpostcompleted() {
+    var staleFormElements = ['memorandumtitle','newposttamemorandum'];
+    var elementStatusPrefix = 'newpostmemorandum';
+    setPostCompleted(staleFormElements, elementStatusPrefix)
 }
 
 function memocompleted() {
-    document.getElementById('memotitle').value = "";
-    document.getElementById('newpoststatus').style.display = "none";
-    document.getElementById('newpostbutton').style.display = "block";
-    document.getElementById('newpostcompleted').innerHTML = "Message Sent. ";
+    var staleFormElements = ['memotitle'];
+    var elementStatusPrefix = 'newpost';
+    setPostCompleted(staleFormElements, elementStatusPrefix)
 }
 
 function geocompleted() {
-    document.getElementById('newgeopostta').value = "";
-    document.getElementById('newpostgeostatus').style.display = "none";
-    document.getElementById('newpostgeobutton').style.display = "block";
-    document.getElementById('newpostgeocompleted').innerHTML = "Message Sent. ";
+    var staleFormElements = ['newgeopostta'];
+    var elementStatusPrefix = 'newpostgeo';
+    setPostCompleted(staleFormElements, elementStatusPrefix)
 }
 
 

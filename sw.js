@@ -13,7 +13,9 @@ const PRECACHE_URLS = [
     'locale/en.json'
 ];
 
-const version = '3.5.5.9';
+//If updating version here, also update version in login.js
+const version = '3.7.4';
+
 const RUNTIME = 'runtime-' + version;
 const INSTALL = 'install-' + version;
 const API = 'api-' + version;

@@ -183,8 +183,18 @@ function setProfile() {
     tq.queueTransaction(tx);
 }
 
+function sub(topicHOSTILE){
+    handleSubscriptionChange(topicHOSTILE, true)
+}
 
-function sub(topicHOSTILE) {
+function unsub(topicHOSTILE){
+    handleSubscriptionChange(topicHOSTILE, false)
+}
+
+function handleSubscriptionChange(topicHOSTILE, isSubscribe = false) {
+
+    code = (isSubscribe ?  "0x6d0d" : "0x6d0e")
+    statusText = (isSubscribe ?  "Sending Subscribe" : "Sending Unsubscribe")
 
     if (!checkForPrivKey()) return false;
 
@@ -199,19 +209,6 @@ function sub(topicHOSTILE) {
     tq.queueTransaction(tx);
 }
 
-function unsub(topicHOSTILE) {
-    if (!checkForPrivKey()) return false;
-
-    //Remove the clicked element so it can't be clicked again
-    event.srcElement.style.display = "none";
-
-    const tx = {
-        data: ["0x6d0e", topicHOSTILE],
-        cash: { key: privkey }
-    }
-    updateStatus("Sending Unsubscribe");
-    tq.queueTransaction(tx);
-}
 
 function addressTransaction(removeElementID, qaddress, actionCode, statusMessage) {
     if (!checkForPrivKey()) return false;
@@ -286,11 +283,11 @@ function rateUser(qaddress, rating, ratingcomment) {
 }
 
 function designate(qaddress, topicHOSTILE, elementid) {
-    addressTopicTransaction(elementid, qaddress, '0x6dc1', "Sending Designate Moderator", topicHOSTILE);
+    addressTopicTransaction(elementid, qaddress, '0x6dc1', "Sending Add Filter", topicHOSTILE);
 }
 
 function dismiss(qaddress, topicHOSTILE, elementid) {
-    addressTopicTransaction(elementid, qaddress, '0x6dc2', "Sending Dismiss Moderator", topicHOSTILE);
+    addressTopicTransaction(elementid, qaddress, '0x6dc2', "Sending Remove Filter", topicHOSTILE);
 }
 
 function hideuser(qaddress, topicHOSTILE, elementid) {
@@ -313,5 +310,69 @@ function addressTopicTransaction(removeElementID, qaddress, actionCode, statusMe
     }
     updateStatus(statusMessage);
     tq.queueTransaction(tx);
+}
+
+async function createSurrogateUser(name,buttonElement,surrogatelink) {
+
+    //Clear old link if there is one
+    var surrogateLinkElement=document.getElementById(surrogatelink);
+    surrogateLinkElement.innerHTML="";
+    
+    //Disable button
+    var buttonElement=document.getElementById(buttonElement);
+    buttonElement.disabled=true;
+    buttonElement.innerText="Creating Private Key";
+    
+    //Send sufficient funds to new account to create name
+    
+    //create new random private key
+    let smnemonic = new BITBOX.Mnemonic().generate(128);
+    var sprivkey = new BITBOX.Mnemonic().toKeypairs(smnemonic, 1, false, "44'/0'/0'/0/")[0].privateKeyWIF;
+    let ecpair = new BITBOX.ECPair().fromWIF(sprivkey);
+    let publicaddress = new BITBOX.ECPair().toLegacyAddress(ecpair);
+    console.log(publicaddress);
+
+    const tx = {
+        cash: {
+            key: privkey,
+            to: [{ address: publicaddress, value: 547 }]
+        }
+    }
+    //updateStatus("Sending Funds To Surrogate Account");
+    tq.queueTransaction(tx);
+
+    //Wait a while for tx to enter mempool
+    buttonElement.innerText="Wait a few seconds for funds to arrive";
+    await sleep(3 * 1000);
+
+    //Try to set new name 
+    let newName = name + " (Surrogate)";
+    buttonElement.innerText="Try to set surrogate name - " + newName;
+
+    buttonElement.innerText="Fetch UTXOs";
+    tq.addUTXOPool(publicaddress);
+    await sleep(3 * 1000);
+
+
+    const tx2 = {
+        data: ["0x6d01", newName],
+        cash: { key: sprivkey }
+    }
+
+    buttonElement.innerText="Fetch UTXOs";
+    
+    tq.queueTransaction(tx2, 
+                            function(){
+                                buttonElement.innerText="Create Surrogate Account";
+                                buttonElement.disabled=false;
+                                surrogateLinkElement.innerHTML=userHTML(publicaddress, newName, "none", 0, 16);
+                            }
+                        );
+    
+
+    //TODO: send change back to original address
+    //TODO: cleanup extra utxopool - destroy, free up memory, storage
+    //TODO: disable, send updates to button text, re-enable button and create link to surrogate profile, update version
+
 }
 
